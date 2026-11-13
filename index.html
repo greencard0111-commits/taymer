@@ -17,13 +17,14 @@
         #controls { margin-bottom: 30px; pointer-events: auto; }
         #start-btn { background: #28a745; font-size: 24px; padding: 15px 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         #reset-btn { background: #dc3545; font-size: 24px; padding: 15px 40px; margin-left: 10px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        #status-text { font-size: 24px; font-weight: bold; color: yellow; text-shadow: 2px 2px 4px #000; margin-top: 10px; }
     </style>
 </head>
 <body>
 
 <!-- Parol so'raydigan oyna -->
 <div id="pin-screen">
-    <h2>Dasturga kirish</h2>
+    <h2>Sprint Taymer</h2>
     <p>Maxfiy parolni kiriting:</p>
     <input type="number" id="pin-input" placeholder="****">
     <button onclick="checkPin()">Kirish</button>
@@ -36,9 +37,12 @@
     <canvas id="canvas" style="display:none;"></canvas>
     <div class="line"></div>
     <div id="ui-layer">
-        <div><span id="timer">0.00</span></div>
+        <div>
+            <span id="timer">0.00</span>
+            <div id="status-text">Kutilyapti...</div>
+        </div>
         <div id="controls">
-            <button id="start-btn" onclick="startTimer()">START</button>
+            <button id="start-btn" onclick="startSequence()">START</button>
             <button id="reset-btn" onclick="resetTimer()">Yangi urinish</button>
         </div>
     </div>
@@ -56,13 +60,14 @@
     let ctx = canvas.getContext('2d', { willReadFrequently: true });
     let lastImageData = null;
     let animationFrame;
+    let statusText = document.getElementById('status-text');
 
     function checkPin() {
         let val = document.getElementById('pin-input').value;
         if (val === PAROL) {
             document.getElementById('pin-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            startCamera(); // Faqat parol to'g'ri bo'lsa kamerani yoqadi
+            startCamera(); 
         } else {
             document.getElementById('pin-error').style.display = 'block';
         }
@@ -70,35 +75,64 @@
 
     async function startCamera() {
         try {
-            // Orqa kamerani avtomatik ochish
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
             video.srcObject = stream;
         } catch (err) {
-            alert("Kameraga ulanib bo'lmadi. Brauzer sozlamalaridan ruxsat berilganiga ishonch hosil qiling.");
+            alert("Kameraga ulanib bo'lmadi. Brauzer ruxsatlarini tekshiring.");
         }
     }
 
-    function startTimer() {
-        // Start bosilganda qisqa signal ovozi (hushtak o'rniga)
+    // Ovozli gapirish funksiyasi
+    function speakText(text) {
+        let msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'uz-UZ';
+        msg.rate = 1.0;
+        window.speechSynthesis.speak(msg);
+    }
+
+    // Hushtak ovozi funksiyasi
+    function playBeep() {
         let actx = new (window.AudioContext || window.webkitAudioContext)();
         let osc = actx.createOscillator();
         osc.connect(actx.destination);
-        osc.frequency.value = 800; // Ovoz balandligi
+        osc.frequency.value = 1000;
         osc.start();
-        setTimeout(() => osc.stop(), 300);
+        setTimeout(() => osc.stop(), 400);
+    }
 
+    function startSequence() {
         document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('reset-btn').style.display = 'inline-block';
         
+        statusText.innerText = "Diqqat...";
+        statusText.style.color = "orange";
+        speakText("Diqqat");
+
+        setTimeout(() => {
+            statusText.innerText = "Tayyorlan...";
+            statusText.style.color = "yellow";
+            speakText("Tayyorlan");
+
+            setTimeout(() => {
+                statusText.innerText = "START!";
+                statusText.style.color = "lime";
+                playBeep(); // Hushtak
+                
+                // Asosiy taymerni ishga tushirish
+                startTimer();
+                
+            }, 1500); // "Tayyorlan" dan keyin 1.5 sek
+        }, 1500); // "Diqqat" dan keyin 1.5 sek
+    }
+
+    function startTimer() {
         startTime = Date.now();
         isRunning = true;
+        document.getElementById('reset-btn').style.display = 'inline-block';
         
-        // Ekranda vaqtni yuritish
         timerInterval = setInterval(() => {
             document.getElementById('timer').innerText = ((Date.now() - startTime) / 1000).toFixed(2);
         }, 10);
 
-        // Harakatni kuzatish uchun canvas o'lchamlarini moslash
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         lastImageData = null;
@@ -110,24 +144,22 @@
         
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         
-        // Ekranning qo'q markazidagi (Yashil chiziq atrofidagi) piksellarni qirqib olish
         let x = Math.floor(canvas.width / 2) - 10;
         let width = 20;
         let currentData = ctx.getImageData(x, 0, width, canvas.height).data;
 
         if (lastImageData) {
             let diff = 0;
-            // Eski va yangi kadr o'rtasidagi farqni hisoblash
             for (let i = 0; i < currentData.length; i += 4) {
-                diff += Math.abs(currentData[i] - lastImageData[i]);     // Qizil
-                diff += Math.abs(currentData[i+1] - lastImageData[i+1]); // Yashil
-                diff += Math.abs(currentData[i+2] - lastImageData[i+2]); // Ko'k
+                diff += Math.abs(currentData[i] - lastImageData[i]);     
+                diff += Math.abs(currentData[i+1] - lastImageData[i+1]); 
+                diff += Math.abs(currentData[i+2] - lastImageData[i+2]); 
             }
             
             let avgDiff = diff / (currentData.length / 4);
             
-            // Agar markazda harakat sezilsa va startdan kamida 0.8 soniya o'tgan bo'lsa (yolg'on to'xtashlarning oldini olish uchun)
-            if (avgDiff > 35 && (Date.now() - startTime) > 800) { 
+            // Harakat sezilsa (startdan kamida 0.5 sek o'tgan bo'lishi kerak)
+            if (avgDiff > 35 && (Date.now() - startTime) > 500) { 
                 stopTimer();
                 return;
             }
@@ -140,10 +172,14 @@
         isRunning = false;
         clearInterval(timerInterval);
         cancelAnimationFrame(animationFrame);
+        statusText.innerText = "MARRA!";
+        statusText.style.color = "red";
     }
 
     function resetTimer() {
         document.getElementById('timer').innerText = "0.00";
+        statusText.innerText = "Kutilyapti...";
+        statusText.style.color = "yellow";
         document.getElementById('start-btn').style.display = 'inline-block';
         document.getElementById('reset-btn').style.display = 'none';
     }
