@@ -2,187 +2,397 @@
 <html lang="uz">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sprint Taymer (Maxfiy)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kamera-Sekundomer (Avtomatik)</title>
     <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background: #222; color: white; text-align: center; overflow: hidden; }
-        #pin-screen { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #111; }
-        input[type="number"] { font-size: 24px; padding: 10px; width: 150px; text-align: center; margin-bottom: 20px; border-radius: 8px; border: none; }
-        button { font-size: 20px; padding: 10px 30px; border: none; border-radius: 8px; background: #007bff; color: white; cursor: pointer; }
-        #app-screen { display: none; position: relative; width: 100vw; height: 100vh; }
-        video, canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
-        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; pointer-events: none; }
-        .line { position: absolute; top: 0; left: 50%; width: 4px; height: 100%; background: lime; transform: translateX(-50%); z-index: 5; }
-        #timer { font-size: 60px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 10px; margin-top: 20px; display: inline-block; pointer-events: auto; }
-        #controls { margin-bottom: 30px; pointer-events: auto; }
-        #start-btn { background: #28a745; font-size: 24px; padding: 15px 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #reset-btn { background: #dc3545; font-size: 24px; padding: 15px 40px; margin-left: 10px; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        #status-text { font-size: 24px; font-weight: bold; color: yellow; text-shadow: 2px 2px 4px #000; margin-top: 10px; }
+        :root {
+            --primary: #10b981;
+            --danger: #ef4444;
+            --dark: #111827;
+            --light: #f3f4f6;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+        body {
+            background-color: var(--dark);
+            color: var(--light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        /* PAROL EKRANI UCHUN CSS */
+        #pin-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--dark);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #pin-input {
+            font-size: 24px;
+            padding: 10px;
+            width: 150px;
+            text-align: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: none;
+            background-color: #374151;
+            color: white;
+            outline: none;
+        }
+        #pin-input:focus {
+            border: 2px solid var(--primary);
+        }
+        /* QOLGAN ESKI CSS */
+        header {
+            background-color: #1f2937;
+            padding: 15px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .camera-container {
+            position: relative;
+            flex: 1;
+            width: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .finish-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+            z-index: 2;
+        }
+        .time-display {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 3rem;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+            z-index: 3;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            border: 2px solid #374151;
+        }
+        .controls {
+            background-color: #1f2937;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 10;
+        }
+        .btn {
+            padding: 15px 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: opacity 0.2s;
+            color: white;
+        }
+        .btn:active {
+            opacity: 0.8;
+        }
+        .btn-start {
+            background-color: var(--primary);
+        }
+        .btn-next {
+            background-color: #3b82f6;
+        }
+        .status-text {
+            text-align: center;
+            font-size: 1rem;
+            color: #9ca3af;
+        }
+        .overlay-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            z-index: 4;
+            display: none;
+        }
+        #sensitivity {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
 
-<!-- Parol so'raydigan oyna -->
-<div id="pin-screen">
-    <h2>Sprint Taymer</h2>
-    <p>Maxfiy parolni kiriting:</p>
-    <input type="number" id="pin-input" placeholder="****">
-    <button onclick="checkPin()">Kirish</button>
-    <p id="pin-error" style="color:red; display:none; margin-top:15px;">Xato parol! Qaytadan urinib ko'ring.</p>
-</div>
+    <!-- PAROL EKRANI -->
+    <div id="pin-screen">
+        <h2 style="margin-bottom: 20px;">Dasturga kirish</h2>
+        <p style="margin-bottom: 10px; color: #9ca3af;">Maxfiy parolni kiriting:</p>
+        <input type="number" id="pin-input" placeholder="****">
+        <button onclick="checkPin()" class="btn btn-start" style="padding: 10px 30px; font-size: 1.2rem;">KIRISH</button>
+        <p id="pin-error" style="color: var(--danger); display: none; margin-top: 15px;">Xato parol! Qaytadan urinib ko'ring.</p>
+    </div>
 
-<!-- Asosiy dastur (Kamera va Taymer) -->
-<div id="app-screen">
-    <video id="video" autoplay playsinline></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <div class="line"></div>
-    <div id="ui-layer">
-        <div>
-            <span id="timer">0.00</span>
-            <div id="status-text">Kutilyapti...</div>
-        </div>
-        <div id="controls">
-            <button id="start-btn" onclick="startSequence()">START</button>
-            <button id="reset-btn" onclick="resetTimer()">Yangi urinish</button>
+    <!-- ASOSIY DASTUR -->
+    <header>Kamera-Sekundomer</header>
+
+    <div class="camera-container">
+        <video id="videoElement" autoplay playsinline></video>
+        <div class="finish-line"></div>
+        <div class="time-display" id="timeDisplay">0.00</div>
+        <div class="overlay-message" id="overlayMessage">START!</div>
+    </div>
+
+    <div class="controls">
+        <div class="status-text" id="statusText">Kamera ishga tushmoqda...</div>
+        <button class="btn btn-start" id="startBtn">Tayyorgarlik (Start)</button>
+        <button class="btn btn-next" id="nextBtn" style="display: none;">2. Keyingi urinish</button>
+        
+        <div style="margin-top: 5px;">
+            <div class="settings-row">
+                <span>Harakat sezuvchanligi:</span>
+            </div>
+            <input type="range" id="sensitivity" min="10" max="100" value="35">
         </div>
     </div>
-</div>
 
-<script>
-    // ==========================================
-    // PAROLNI SHU YERDAN O'ZGARTIRISHINGIZ MUMKIN
-    const PAROL = "1707"; 
-    // ==========================================
+    <script>
+        // ==========================================
+        // PAROL (Shu yerdan o'zgartirishingiz mumkin)
+        const PAROL = "1707"; 
+        // ==========================================
 
-    let startTime, timerInterval, isRunning = false;
-    let video = document.getElementById('video');
-    let canvas = document.getElementById('canvas');
-    let ctx = canvas.getContext('2d', { willReadFrequently: true });
-    let lastImageData = null;
-    let animationFrame;
-    let statusText = document.getElementById('status-text');
-
-    function checkPin() {
-        let val = document.getElementById('pin-input').value;
-        if (val === PAROL) {
-            document.getElementById('pin-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            startCamera(); 
-        } else {
-            document.getElementById('pin-error').style.display = 'block';
+        function checkPin() {
+            const val = document.getElementById('pin-input').value;
+            if (val === PAROL) {
+                document.getElementById('pin-screen').style.display = 'none';
+                initCamera(); // Parol to'g'ri bo'lsagina kamerani ishga tushiradi
+            } else {
+                document.getElementById('pin-error').style.display = 'block';
+            }
         }
-    }
 
-    async function startCamera() {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            video.srcObject = stream;
-        } catch (err) {
-            alert("Kameraga ulanib bo'lmadi. Brauzer ruxsatlarini tekshiring.");
+        const video = document.getElementById('videoElement');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const startBtn = document.getElementById('startBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const statusText = document.getElementById('statusText');
+        const overlayMessage = document.getElementById('overlayMessage');
+        const sensitivitySlider = document.getElementById('sensitivity');
+
+        let isRunning = false;
+        let isReady = false;
+        let startTime = 0;
+        let timerInterval = null;
+        let motionAnimFrame = null;
+        
+        // Motion detection canvas
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let prevData = null;
+
+        // Beeper using Web Audio API
+        function playBeep(freq, duration) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = 'sine';
+            oscillator.frequency.value = freq;
+            oscillator.connect(audioCtx.destination);
+            oscillator.start();
+            setTimeout(() => oscillator.stop(), duration);
         }
-    }
 
-    // Ovozli gapirish funksiyasi
-    function speakText(text) {
-        let msg = new SpeechSynthesisUtterance(text);
-        msg.lang = 'uz-UZ';
-        msg.rate = 1.0;
-        window.speechSynthesis.speak(msg);
-    }
+        // Initialize Camera
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } }
+                });
+                video.srcObject = stream;
+                statusText.textContent = "Kamera tayyor. Konusga to'g'rilang.";
+            } catch (err) {
+                statusText.textContent = "Kamera ruxsati berilmadi yoki topilmadi!";
+                console.error(err);
+            }
+        }
 
-    // Hushtak ovozi funksiyasi
-    function playBeep() {
-        let actx = new (window.AudioContext || window.webkitAudioContext)();
-        let osc = actx.createOscillator();
-        osc.connect(actx.destination);
-        osc.frequency.value = 1000;
-        osc.start();
-        setTimeout(() => osc.stop(), 400);
-    }
+        video.addEventListener('loadedmetadata', () => {
+            canvas.width = 20; // very narrow strip for detection
+            canvas.height = video.videoHeight || 480;
+        });
 
-    function startSequence() {
-        document.getElementById('start-btn').style.display = 'none';
-        
-        statusText.innerText = "Diqqat...";
-        statusText.style.color = "orange";
-        speakText("Diqqat");
+        // Timer Format
+        function formatTime(ms) {
+            const seconds = Math.floor(ms / 1000);
+            const milliseconds = Math.floor((ms % 1000) / 10);
+            return `${seconds}.${milliseconds.toString().padStart(2, '0')}`;
+        }
 
-        setTimeout(() => {
-            statusText.innerText = "Tayyorlan...";
-            statusText.style.color = "yellow";
-            speakText("Tayyorlan");
+        function updateTimer() {
+            if (!isRunning) return;
+            const currentTime = Date.now();
+            timeDisplay.textContent = formatTime(currentTime - startTime);
+            timerInterval = requestAnimationFrame(updateTimer);
+        }
 
-            setTimeout(() => {
-                statusText.innerText = "START!";
-                statusText.style.color = "lime";
-                playBeep(); // Hushtak
-                
-                // Asosiy taymerni ishga tushirish
-                startTimer();
-                
-            }, 1500); // "Tayyorlan" dan keyin 1.5 sek
-        }, 1500); // "Diqqat" dan keyin 1.5 sek
-    }
+        // Motion Detection Logic
+        function checkMotion() {
+            if (!isRunning) return;
 
-    function startTimer() {
-        startTime = Date.now();
-        isRunning = true;
-        document.getElementById('reset-btn').style.display = 'inline-block';
-        
-        timerInterval = setInterval(() => {
-            document.getElementById('timer').innerText = ((Date.now() - startTime) / 1000).toFixed(2);
-        }, 10);
-
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        lastImageData = null;
-        detectMotion();
-    }
-
-    function detectMotion() {
-        if (!isRunning) return;
-        
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        let x = Math.floor(canvas.width / 2) - 10;
-        let width = 20;
-        let currentData = ctx.getImageData(x, 0, width, canvas.height).data;
-
-        if (lastImageData) {
+            // Draw center slice of video to canvas
+            const sx = (video.videoWidth / 2) - 10;
+            ctx.drawImage(video, sx, 0, 20, video.videoHeight, 0, 0, 20, canvas.height);
+            
+            const currentData = ctx.getImageData(0, 0, 20, canvas.height).data;
             let diff = 0;
-            for (let i = 0; i < currentData.length; i += 4) {
-                diff += Math.abs(currentData[i] - lastImageData[i]);     
-                diff += Math.abs(currentData[i+1] - lastImageData[i+1]); 
-                diff += Math.abs(currentData[i+2] - lastImageData[i+2]); 
+            
+            if (prevData) {
+                // Compare pixels
+                const thresholdValue = (110 - sensitivitySlider.value) * 1000; // sensitivity tuning
+                for (let i = 0; i < currentData.length; i += 4) {
+                    diff += Math.abs(currentData[i] - prevData[i]) + 
+                            Math.abs(currentData[i+1] - prevData[i+1]) + 
+                            Math.abs(currentData[i+2] - prevData[i+2]);
+                }
+
+                if (diff > thresholdValue) {
+                    stopTimer();
+                    return;
+                }
             }
             
-            let avgDiff = diff / (currentData.length / 4);
-            
-            // Harakat sezilsa (startdan kamida 0.5 sek o'tgan bo'lishi kerak)
-            if (avgDiff > 35 && (Date.now() - startTime) > 500) { 
-                stopTimer();
-                return;
-            }
+            prevData = new Uint8ClampedArray(currentData);
+            motionAnimFrame = requestAnimationFrame(checkMotion);
         }
-        lastImageData = currentData;
-        animationFrame = requestAnimationFrame(detectMotion);
-    }
 
-    function stopTimer() {
-        isRunning = false;
-        clearInterval(timerInterval);
-        cancelAnimationFrame(animationFrame);
-        statusText.innerText = "MARRA!";
-        statusText.style.color = "red";
-    }
+        function showMessage(msg, duration) {
+            overlayMessage.textContent = msg;
+            overlayMessage.style.display = 'block';
+            setTimeout(() => {
+                overlayMessage.style.display = 'none';
+            }, duration);
+        }
 
-    function resetTimer() {
-        document.getElementById('timer').innerText = "0.00";
-        statusText.innerText = "Kutilyapti...";
-        statusText.style.color = "yellow";
-        document.getElementById('start-btn').style.display = 'inline-block';
-        document.getElementById('reset-btn').style.display = 'none';
-    }
-</script>
+        // Start Sequence (On Your Marks... Set... Beep!)
+        async function startSequence() {
+            startBtn.style.display = 'none';
+            statusText.textContent = "Tayyorlanish...";
+            timeDisplay.textContent = "0.00";
+            prevData = null;
+
+            // Short beeps
+            playBeep(440, 200);
+            showMessage("DIQQAT!", 800);
+            await new Promise(r => setTimeout(r, 1500));
+            
+            playBeep(440, 200);
+            showMessage("TAYYOR...", 800);
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Start Beep
+            playBeep(880, 500);
+            showMessage("START!", 500);
+            
+            // Start Timer & Motion Detection
+            isRunning = true;
+            startTime = Date.now();
+            updateTimer();
+            statusText.textContent = "Kutilyapti... Harakat seziilganda to'xtaydi.";
+            
+            // Small delay before motion detection starts to avoid detecting the immediate camera shake
+            setTimeout(() => {
+                if(isRunning) checkMotion();
+            }, 300);
+            
+            nextBtn.style.display = 'block';
+            nextBtn.textContent = "Majburiy to'xtatish";
+            nextBtn.style.backgroundColor = "var(--danger)";
+        }
+
+        function stopTimer() {
+            isRunning = false;
+            cancelAnimationFrame(timerInterval);
+            cancelAnimationFrame(motionAnimFrame);
+            
+            const finalTime = Date.now() - startTime;
+            timeDisplay.textContent = formatTime(finalTime);
+            timeDisplay.style.color = "var(--primary)";
+            
+            statusText.textContent = "Natija yozib olindi!";
+            playBeep(600, 300);
+            
+            nextBtn.textContent = "2. Keyingi urinish";
+            nextBtn.style.backgroundColor = "#3b82f6";
+            
+            // Flash screen effect
+            document.body.style.backgroundColor = "white";
+            setTimeout(() => {
+                document.body.style.backgroundColor = "var(--dark)";
+            }, 100);
+        }
+
+        startBtn.addEventListener('click', () => {
+            startSequence();
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (isRunning) {
+                // Manual Stop if motion detection missed
+                stopTimer();
+            } else {
+                // Reset for next
+                timeDisplay.textContent = "0.00";
+                timeDisplay.style.color = "#fff";
+                startBtn.style.display = 'block';
+                nextBtn.style.display = 'none';
+                statusText.textContent = "Yangi urinishga tayyor.";
+            }
+        });
+
+    </script>
 </body>
 </html>
